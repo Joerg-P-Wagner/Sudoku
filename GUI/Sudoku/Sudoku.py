@@ -13,11 +13,11 @@ class InteractionFrame(AInteractionFrame):
     def __init__(self, parent) -> None:
         super().__init__(parent)
         
-        self.edit_number_field = EditNumberField(parent=self)
+        self.number_block = NumberBlock(parent=self)
         self.info_field = InfoField(parent=self)
         
         self.layout = QStackedLayout()
-        self.layout.addWidget(self.edit_number_field)
+        self.layout.addWidget(self.number_block)
         self.layout.addWidget(self.info_field)
         self.layout.setCurrentWidget(self.info_field)
         
@@ -25,7 +25,7 @@ class InteractionFrame(AInteractionFrame):
     
     def toggle_edit(self, checked):
         if checked:
-            self.layout.setCurrentWidget(self.edit_number_field)
+            self.layout.setCurrentWidget(self.number_block)
         else:
             self.info_field.make_update()
             self.layout.setCurrentWidget(self.info_field)
@@ -47,9 +47,9 @@ class InfoField(QLabel):
         self.update()
 
 
-class EditNumberField(ASubField):
+class NumberBlock(ASubField):
     def __init__(self, parent) -> None:
-        super().__init__(parent, (0,0), field_class=NumberField)
+        super().__init__(parent, (0,0), field_class=NumberButtom)
         self.field_coords = []
     
         n = 1
@@ -60,14 +60,14 @@ class EditNumberField(ASubField):
         
     def add_field_coords(self, coords):
         self.field_coords += tuple(coords)
+        print(self.field_coords)
     
     def remove_field_coords(self, coords):
-        try:
-            self.field_coords.remove(*coords)
-        except ValueError: ...
+        self.field_coords.remove(*coords)
+        print(self.field_coords)
 
 
-class NumberField(ASingleField):
+class NumberButtom(ASingleField):
     def __init__(self, parent, coords: tuple) -> None:
         super().__init__(parent, coords)
         self.clicked.connect(self.save_number)
@@ -78,9 +78,9 @@ class NumberField(ASingleField):
     def save_number(self):
         self.root.field_setting_frame.field_frame.backend_field.set_numbers(int(self.text()), self.parent().field_coords)
         while(len(self.parent().field_coords) > 0):
-            coord = self.parent().field_coords.pop(0)
+            coord = self.parent().field_coords[0]
             self.root.field_setting_frame.field_frame.sub_fields[coord[0][0]][coord[0][1]].single_fields[coord[1][0]][coord[1][1]].set_text()
-            self.root.field_setting_frame.field_frame.sub_fields[coord[0][0]][coord[0][1]].single_fields[coord[1][0]][coord[1][1]].is_checked(False)
+            self.root.field_setting_frame.field_frame.sub_fields[coord[0][0]][coord[0][1]].single_fields[coord[1][0]][coord[1][1]].click()
         self.root.field_setting_frame.field_frame.backend_field.count_numbers()
 
 
@@ -129,10 +129,6 @@ class FieldFrame(AFieldFrame):
                 
         self.setLayout(layout)
         
-    def toggle_edit(self, checked):
-        for x in self.sub_fields:
-            for y in x:
-                y.toggle_edit(checked)
 
 
 class SubField(ASubField):
@@ -151,23 +147,24 @@ class SingleField(ASingleField):
         self.set_style()
         self.set_text()
     
-    def toggle_edit(self, edit_checked):
-        if edit_checked:
+    def toggle_edit(self, checked):
+        if checked:
+            self.clicked.connect(self.check)
             self.setCheckable(True)
-            self.clicked.connect(self.is_checked)
         else:
-            self.is_checked(False)
+            if self.isChecked():
+                self.click()
             self.setCheckable(False)
-            self.clicked.connect(self.is_checked)
+            self.clicked.disconnect()
         self.update()
         
-    def is_checked(self, self_checked):
+    def check(self, self_checked):
         if self_checked:
             self.setStyleSheet("background-color: #ccffc7; border: 1px solid black;")
-            self.root.action_frame.interaction_frame.edit_number_field.add_field_coords(self.coords)
+            self.root.action_frame.interaction_frame.number_block.add_field_coords(self.coords)
         else:
             self.setStyleSheet("background-color: #fffaf0; border: 1px solid black;")
-            self.root.action_frame.interaction_frame.edit_number_field.remove_field_coords(self.coords)
+            self.root.action_frame.interaction_frame.number_block.remove_field_coords(self.coords)
         self.update()
     
     def set_style(self):

@@ -47,7 +47,10 @@ class AFieldFrame(QFrame):
         super().__init__(parent)
     
     @abstractmethod
-    def toggle_edit(self, checked): ...
+    def toggle_edit(self, checked):
+        for x in self.sub_fields:
+            for y in x:
+                y.toggle_edit(checked)
 
 
 class ASubField(QFrame):
