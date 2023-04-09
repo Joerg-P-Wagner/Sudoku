@@ -1,6 +1,6 @@
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont
-from PySide6.QtWidgets import QGridLayout, QHBoxLayout, QStackedLayout, QPushButton, QLabel
+from PySide6.QtWidgets import QGridLayout, QHBoxLayout, QVBoxLayout, QStackedLayout, QPushButton, QLabel
 
 from .ASudoku import AInteractionFrame, ANavigationFrame, ALabelFrame, AFieldFrame, ASubField, ASingleField
 from Source import Backend
@@ -29,6 +29,7 @@ class InteractionFrame(AInteractionFrame):
         else:
             self.info_field.make_update()
             self.layout.setCurrentWidget(self.info_field)
+            self.parent().parent().field_setting_frame.field_frame.set_style()
 
 
 class InfoField(QLabel):
@@ -90,10 +91,14 @@ class NavigationFrame(ANavigationFrame):
         
         self.edit_button = QPushButton("Edit")
         self.edit_button.setCheckable(True)
-        self.edit_button.pos
         self.edit_button.clicked.connect(self.parent().toggle_edit)
         
-        layout = QHBoxLayout()
+        self.block_button = QPushButton("Block")
+        self.block_button.clicked.connect(self.parent().parent().field_setting_frame.field_frame.backend_field.step)
+        self.block_button.clicked.connect(self.parent().parent().field_setting_frame.field_frame.set_style)
+        
+        layout = QVBoxLayout()
+        layout.addWidget(self.block_button)
         layout.addWidget(self.edit_button)
         
         self.setLayout(layout)
@@ -128,12 +133,18 @@ class FieldFrame(AFieldFrame):
             self.sub_fields.append(sub_field_row)
                 
         self.setLayout(layout)
+    
+    def set_style(self):
+        [ sub_field.set_style() for x in self.sub_fields for sub_field in x ]
         
 
 
 class SubField(ASubField):
     def __init__(self, parent, coords: tuple) -> None:
         super().__init__(parent, coords, field_class=SingleField)
+    
+    def set_style(self):
+        [ single_field.set_style(self.parent().backend_field.sub_fields[self.coords[0]][self.coords[1]].blocked) for x in self.single_fields for single_field in x ]
 
 
 class SingleField(ASingleField):
@@ -167,9 +178,9 @@ class SingleField(ASingleField):
             self.root.action_frame.interaction_frame.number_block.remove_field_coords(self.coords)
         self.update()
     
-    def set_style(self):
-        if self.backend_single_field.blocked:
-            print("grau")
+    def set_style(self, subfield_blocked=False):
+        if self.backend_single_field.blocked or subfield_blocked:
+            self.setStyleSheet("background-color: #B5B5B5; border: 1px solid black;")
         else:
             self.setStyleSheet("background-color: #fffaf0; border: 1px solid black;")
     

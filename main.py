@@ -6,6 +6,5 @@ from Source.Backend import Field
 
 app = QApplication(sys.argv)
 window = MainWindow("Sudoku")
-logic = Field()
 
 app.exec()
