@@ -179,8 +179,10 @@ class SingleField(ASingleField):
         self.update()
     
     def set_style(self, subfield_blocked=False):
-        if self.backend_single_field.blocked or subfield_blocked:
-            self.setStyleSheet("background-color: #B5B5B5; border: 1px solid black;")
+        if self.backend_single_field.number:
+            self.setStyleSheet("background-color: #c9c9c9; border: 1px solid black;")
+        elif self.backend_single_field.blocked or subfield_blocked:
+            self.setStyleSheet("background-color: #c9f3f3; border: 1px solid black;")
         else:
             self.setStyleSheet("background-color: #fffaf0; border: 1px solid black;")
     
