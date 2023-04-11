@@ -1,9 +1,5 @@
-import sys
-
-from PySide6.QtWidgets import QApplication
-
-from . import Sudoku
-from .AbstractFields import AMainWindow, AMainFrame, AActionFrame, AFieldSettingFrame
+from . import SudokuGUI
+from .AMainWindow import AMainWindow, AMainFrame, AActionFrame, AFieldSettingFrame
 
 
 ##################################################################################################
@@ -16,7 +12,6 @@ class MainWindow(AMainWindow):
         super().__init__(main_frame=MainFrame, label_text=label_text)
         
         self.setWindowTitle("Sudoku Solver")
-        # self.setFixedSize(1000,1000)
         self.setStyleSheet("background-color: #fff3d1")
 
 
@@ -30,7 +25,7 @@ class MainFrame(AMainFrame):
 
 class ActionFrame(AActionFrame):
     def __init__(self, parent):
-        super().__init__(parent, interaction_frame=Sudoku.InteractionFrame, navigation_frame=Sudoku.NavigationFrame)
+        super().__init__(parent, interaction_frame=SudokuGUI.InteractionFrame, navigation_frame=SudokuGUI.NavigationFrame)
 
 
 ##### FIELD FRAMES ################################################################################
@@ -38,11 +33,4 @@ class ActionFrame(AActionFrame):
 
 class FieldSettingFrame(AFieldSettingFrame):
     def __init__(self, parent, label_text) -> None:
-        super().__init__(parent, field_frame=Sudoku.FieldFrame, label_frame = Sudoku.LabelFrame, label_text=label_text)
-
-
-if __name__ == '__main__':
-    app = QApplication(sys.argv)
-    window = MainWindow()
-    
-    app.exec()
+        super().__init__(parent, field_frame=SudokuGUI.FieldFrame, label_frame = SudokuGUI.LabelFrame, label_text=label_text)

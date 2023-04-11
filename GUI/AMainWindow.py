@@ -1,7 +1,7 @@
 from abc import ABCMeta, abstractmethod
-from PySide6.QtWidgets import QMainWindow, QFrame, QLabel, QPushButton, QGridLayout, QHBoxLayout, QVBoxLayout
-from PySide6.QtGui import QFont
-from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QMainWindow, QFrame, QHBoxLayout, QVBoxLayout
+
+from Backend import SudokuBackend
 
 
 ##################################################################################################
@@ -22,9 +22,12 @@ class AMainFrame(QFrame):   # AMainFrame == ROOT-Frame
     __metaclass__ = ABCMeta
     def __init__(self, parent, field_setting_frame, action_frame, label_text) -> None:
         super().__init__(parent)
+        if label_text == "Sudoku":
+            self.backend = SudokuBackend.SudokuTask.Field()
+            self.solution = SudokuBackend.SudokuSolution(self.backend)
         self.field_setting_frame = field_setting_frame(parent=self, label_text=label_text)
         self.action_frame = action_frame(parent=self)
-        
+
         layout = QHBoxLayout()
         layout.addWidget(self.field_setting_frame)
         layout.addWidget(self.action_frame)
@@ -41,7 +44,8 @@ class AMainFrame(QFrame):   # AMainFrame == ROOT-Frame
 class AActionFrame(QFrame):
     __metaclass__ = ABCMeta
     def __init__(self, parent, interaction_frame, navigation_frame) -> None:
-        super().__init__(parent)
+        super().__init__(parent)        # parent == MainFrame
+        self.root = self.parent()       # root == MainFrame
         self.interaction_frame = interaction_frame(parent=self)
         self.navigation_frame = navigation_frame(parent=self)
         
@@ -62,7 +66,8 @@ class AActionFrame(QFrame):
 class AFieldSettingFrame(QFrame):
     __metaclass__ = ABCMeta
     def __init__(self, parent, field_frame, label_frame, label_text) -> None:
-        super().__init__(parent)
+        super().__init__(parent)        # parent == MainFrame
+        self.root = self.parent()       # root == MainFrame
         self.field_frame = field_frame(parent=self)
         self.label_frame = label_frame(parent=self, label_text=label_text)
         
