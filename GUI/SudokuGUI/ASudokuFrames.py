@@ -22,12 +22,20 @@ class AInteractionFrame(QFrame):
     
     @abstractmethod
     def toggle_edit(self, checked): ...
+    
+    @abstractmethod
+    def make_update(self) -> None:
+        self.edit_field.make_update()
+        self.info_field.make_update()
 
 
 class AInfoField(QLabel):
     def __init__(self, parent) -> None:
         super().__init__(parent)                        # parent == InteractionFrame
         self.root = self.parent().root                  # root == MainFrame
+    
+    @abstractmethod
+    def make_update(self) -> None: ...
 
 
 class ANavigationFrame(QFrame):
@@ -84,6 +92,9 @@ class ALabelFrame(QLabel):
     
     @abstractmethod
     def toggle_edit(self, checked): ...
+    
+    @abstractmethod
+    def make_update(self) -> None: ...
 
 
 class AFieldFrame(QFrame):
@@ -108,8 +119,14 @@ class AFieldFrame(QFrame):
     @abstractmethod
     def toggle_edit(self, checked):
         for x in self.sub_fields:
-            for y in x:
-                y.toggle_edit(checked)
+            for sub_field in x:
+                sub_field.toggle_edit(checked)
+    
+    @abstractmethod
+    def make_update(self) -> None:
+        for x in self.sub_fields:
+            for sub_field in x:
+                sub_field.make_update()
 
 
 class ASubField(QFrame):
@@ -135,19 +152,39 @@ class ASubField(QFrame):
     @abstractmethod
     def toggle_edit(self, checked):
         for x in self.single_fields:
-            for y in x:
-                y.toggle_edit(checked)
+            for single_field in x:
+                single_field.toggle_edit(checked)
+    
+    @abstractmethod
+    def make_update(self) -> None:
+        for x in self.single_fields:
+            for single_field in x:
+                single_field.make_update()
 
 
 class ASingleField(QPushButton):
     __metaclass__ = ABCMeta
-    def __init__(self, parent, coords) -> None:
+    def __init__(self, parent, coords: tuple) -> None:
         super().__init__(parent)            # parent == SubField
-        self.root = self.parent().root      # root == MainFrame
-        self.coords = coords
-        
+        self.__root = self.parent().root      # root == MainFrame
+        self.__coords = coords
+        self.__backend_single_field = self.root.backend.sub_fields[self.coords[0][0][0]][self.coords[0][0][1]].single_fields[self.coords[0][1][0]][self.coords[0][1][1]]
+
         self.setFixedSize(40,40)
         self.setFont(QFont("Arial", 15))
     
+    @property
+    def root(self):
+        return self.__root
+    
+    @property
+    def coords(self) -> tuple:
+        return self.__coords
+    
+    @property
+    def backend_single_field(self):
+        return self.__backend_single_field
+    
     @abstractmethod
     def toggle_edit(self, checked): ...
+    

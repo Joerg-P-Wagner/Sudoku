@@ -36,6 +36,10 @@ class AMainFrame(QFrame):   # AMainFrame == ROOT-Frame
     @abstractmethod
     def toggle_edit(self, checked):
         self.field_setting_frame.toggle_edit(checked)
+    
+    @abstractmethod
+    def make_update(self) -> None:
+        self.field_setting_frame.make_update()
 
 
 ##### ACTION FRAMES ###############################################################################
@@ -58,6 +62,11 @@ class AActionFrame(QFrame):
     def toggle_edit(self, checked):
         self.parent().toggle_edit(checked)
         self.interaction_frame.toggle_edit(checked)
+    
+    @abstractmethod
+    def make_update(self) -> None:
+        self.interaction_frame.make_update()
+        # self.navigation_frame.make_update()     # will be not neccessary i think
 
 
 ##### FIELD FRAMES ################################################################################
@@ -68,8 +77,8 @@ class AFieldSettingFrame(QFrame):
     def __init__(self, parent, field_frame, label_frame, label_text) -> None:
         super().__init__(parent)        # parent == MainFrame
         self.root = self.parent()       # root == MainFrame
-        self.field_frame = field_frame(parent=self)
         self.label_frame = label_frame(parent=self, label_text=label_text)
+        self.field_frame = field_frame(parent=self)
         
         layout = QVBoxLayout()
         layout.addWidget(self.label_frame)
@@ -78,5 +87,10 @@ class AFieldSettingFrame(QFrame):
     
     @abstractmethod
     def toggle_edit(self, checked):
-        self.field_frame.toggle_edit(checked)
         self.label_frame.toggle_edit(checked)
+        self.field_frame.toggle_edit(checked)
+    
+    @abstractmethod
+    def make_update(self) -> None:
+        self.label_frame.make_update()
+        self.field_frame.make_update()

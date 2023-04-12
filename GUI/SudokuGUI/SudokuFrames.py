@@ -14,7 +14,6 @@ class InteractionFrame(AInteractionFrame):
         else:
             self.info_field.make_update()
             self.layout.setCurrentWidget(self.info_field)
-            self.root.field_setting_frame.field_frame.set_style()
 
 
 class InfoField(AInfoField):
@@ -46,11 +45,9 @@ class EditField(ASubField):
         
     def add_field_coords(self, coords):
         self.field_coords += tuple(coords)
-        print(self.field_coords)
     
     def remove_field_coords(self, coords):
         self.field_coords.remove(*coords)
-        print(self.field_coords)
 
 
 class NumberButtom(ASingleField):
@@ -60,12 +57,8 @@ class NumberButtom(ASingleField):
 
     def save_number(self):
         self.root.backend.set_numbers(int(self.text()), self.parent().field_coords)
-        while(len(self.parent().field_coords) > 0):
-            coord = self.parent().field_coords[0]
-            self.root.field_setting_frame.field_frame.sub_fields[coord[0][0]][coord[0][1]].single_fields[coord[1][0]][coord[1][1]].set_text()
-            self.root.field_setting_frame.field_frame.sub_fields[coord[0][0]][coord[0][1]].single_fields[coord[1][0]][coord[1][1]].click()
         self.root.backend.count_numbers()
-
+        self.root.make_update()
 
 class NavigationFrame(ANavigationFrame):
     def __init__(self, parent) -> None:
@@ -73,15 +66,12 @@ class NavigationFrame(ANavigationFrame):
         
         
     def step(self):
-        self.root.field_setting_frame.field_frame.set_text
-        self.root.field_setting_frame.field_frame.set_style
-        self.parent().interaction_frame.info_field.make_update
+        self.root.solution.step()     # WIP   
+        self.root.make_update()
         
     def block(self):
-        self.root.backend.block()
-        self.root.field_setting_frame.field_frame.set_style()
-        
-        
+        self.root.solution.block()
+        self.root.make_update()
 
 
 ##### FIELD FRAMES ################################################################################
@@ -96,32 +86,16 @@ class FieldFrame(AFieldFrame):
     def __init__(self, parent) -> None:
         super().__init__(parent, SubField)
 
-    def set_style(self):
-        [ sub_field.set_style() for x in self.sub_fields for sub_field in x ]
-    
-    def set_text(self):
-        [ sub_field.set_text() for x in self.sub_fields for sub_field in x ]
-        
-
 
 class SubField(ASubField):
     def __init__(self, parent, coords: tuple) -> None:
         super().__init__(parent, coords, field_class=SingleField)
-    
-    def set_style(self):
-        [ single_field.set_style(self.root.backend.sub_fields[self.coords[0]][self.coords[1]].blocked) for x in self.single_fields for single_field in x ]
-    
-    def set_text(self):
-        [ single_field.set_text() for x in self.single_fields for single_field in x ]
 
 
 class SingleField(ASingleField):
     def __init__(self, parent, coords: tuple) -> None:
         super().__init__(parent, coords)
-        self.backend_single_field = self.root.backend.sub_fields[self.coords[0][0][0]][self.coords[0][0][1]].single_fields[self.coords[0][1][0]][self.coords[0][1][1]]
-
-        self.set_style()
-        self.set_text()
+        self.make_update()
     
     def toggle_edit(self, checked):
         if checked:
@@ -132,7 +106,6 @@ class SingleField(ASingleField):
                 self.click()
             self.setCheckable(False)
             self.clicked.disconnect()
-        self.update()
         
     def check(self, self_checked):
         if self_checked:
@@ -146,16 +119,23 @@ class SingleField(ASingleField):
             self.root.action_frame.interaction_frame.edit_field.remove_field_coords(self.coords)
         self.update()
     
-    def set_style(self, subfield_blocked=False):
+    def __set_style(self, subfield_blocked=False):
         if self.backend_single_field.number:
             self.setStyleSheet("background-color: #c9c9c9; border: 1px solid black;")
-        elif self.backend_single_field.blocked or subfield_blocked:
+        elif self.backend_single_field.is_blocked or subfield_blocked:
             self.setStyleSheet("background-color: #c9f3f3; border: 1px solid black;")
         else:
             self.setStyleSheet("background-color: #fffaf0; border: 1px solid black;")
     
-    def set_text(self):
+    def __set_text(self):
         v = self.backend_single_field.number
         text = str(v) if v else ""
         self.setText(text)
+        self.update()
+    
+    def make_update(self) -> None:
+        if self.isChecked():
+            self.click()
+        self.__set_style()
+        self.__set_text()
         self.update()
