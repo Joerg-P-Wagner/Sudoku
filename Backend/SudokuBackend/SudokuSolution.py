@@ -34,23 +34,26 @@ class SudokuSolution:
     def block_horizontal(self, x1, x2, on):
         for y in range(3):
             for z in range(3):
-                self.field.sub_fields[x1][y].single_fields[x2][z].is_blocked = on
+                if not self.field.sub_fields[x1][y].single_fields[x2][z].number:
+                    self.field.sub_fields[x1][y].single_fields[x2][z].is_blocked = on
     
     def block_vertical(self, y1, y2, on):
         for x in range(3):
             for z in range(3):
-                self.field.sub_fields[x][y1].single_fields[z][y2].is_blocked = on
+                if not self.field.sub_fields[x][y1].single_fields[z][y2].number:
+                    self.field.sub_fields[x][y1].single_fields[z][y2].is_blocked = on
 
     @staticmethod
     def subfield_full_block(sub_field, on):
         for x in range(3):
             for y in range(3):
-                sub_field.single_fields[x][y].is_blocked = on
+                if not sub_field.single_fields[x][y].number:
+                    sub_field.single_fields[x][y].is_blocked = on
 
     def get_unblocked(self):
         self.unblocked = []
         for x in self.field.sub_fields:
-            for sub_field in x:     # BUG
+            for sub_field in x:
                 l = []
                 l = [ single_field.coords for sl in sub_field.single_fields for single_field in sl if not single_field.is_blocked]
                 print(f"l == {l}")
