@@ -72,8 +72,10 @@ class SudokuSolution:
     def missing_in_field(self):
         i = self.count % len(self.steps)
         if i == 0:
-            self.number += 1
-            self.number = 1 if self.number == 10 else self.number
+            while(True):
+                self.number += 1
+                self.number = 1 if self.number == 10 else self.number
+                if self.field.number_amount[self.number] != 9: break
         self.steps[i]()
         self.count += 1
         

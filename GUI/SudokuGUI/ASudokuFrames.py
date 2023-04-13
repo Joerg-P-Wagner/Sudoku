@@ -164,11 +164,11 @@ class ASubField(QFrame):
 
 class ASingleField(QPushButton):
     __metaclass__ = ABCMeta
-    def __init__(self, parent, coords: tuple) -> None:
+    def __init__(self, parent, coords: tuple, is_in_field=False) -> None:
         super().__init__(parent)            # parent == SubField
         self.__root = self.parent().root      # root == MainFrame
         self.__coords = coords
-        self.__backend_single_field = self.root.backend.sub_fields[self.coords[0][0][0]][self.coords[0][0][1]].single_fields[self.coords[0][1][0]][self.coords[0][1][1]]
+        self.__backend_single_field = self.root.backend.sub_fields[self.coords[0][0][0]][self.coords[0][0][1]].single_fields[self.coords[0][1][0]][self.coords[0][1][1]] if is_in_field else None
 
         self.setFixedSize(40,40)
         self.setFont(QFont("Arial", 15))
@@ -187,4 +187,7 @@ class ASingleField(QPushButton):
     
     @abstractmethod
     def toggle_edit(self, checked): ...
+    
+    @abstractmethod
+    def make_update(self): ...
     

@@ -23,6 +23,7 @@ class InfoField(AInfoField):
         self.make_update()
 
     def make_update(self):
+        self.backend.count_numbers()
         text = ""
         for k, v in self.backend.number_amount.items():
             text += f"{k}: {v}x"
@@ -36,6 +37,8 @@ class EditField(ASubField):
     def __init__(self, parent) -> None:
         super().__init__(parent, (0,0), field_class=NumberButtom)
         self.field_coords = []
+        self.field_value = []
+        self.connected_button = None
     
         n = 1
         for x in self.single_fields:
@@ -48,6 +51,41 @@ class EditField(ASubField):
     
     def remove_field_coords(self, coords):
         self.field_coords.remove(*coords)
+    
+    def toggle_button(self):
+        if self.connect_button.isChecked():...
+    
+    def connect_button(self, number):
+        if number == 1:
+            self.connected_button = self.single_fields[0][0]
+        elif number == 2:
+            self.connected_button = self.single_fields[0][1]
+        elif number == 3:
+            self.connected_button = self.single_fields[0][2]
+        elif number == 4:
+            self.connected_button = self.single_fields[1][0]
+        elif number == 5:
+            self.connected_button = self.single_fields[1][1]
+        elif number == 6:
+            self.connected_button = self.single_fields[1][2]
+        elif number == 7:
+            self.connected_button = self.single_fields[2][0]
+        elif number == 8:
+            self.connected_button = self.single_fields[2][1]
+        elif number == 9:
+            self.connected_button = self.single_fields[2][2]
+            
+        self.connected_button.clicked.disconnect()
+        self.connected_button.setCheckable(True)
+        self.connected_button.setChecked(True)
+        self.connected_button.clicked.connect(self.connected_button.delete_number)
+    
+    def disconnect_button(self):
+        if self.connected_button:
+            self.connected_button.clicked.disconnect()
+            self.connected_button.setChecked(False)
+            self.connected_button.setCheckable(False)
+            self.connected_button.clicked.connect(self.connected_button.save_number)
 
 
 class NumberButtom(ASingleField):
@@ -55,10 +93,15 @@ class NumberButtom(ASingleField):
         super().__init__(parent, coords)
         self.clicked.connect(self.save_number)
 
-    def save_number(self):
-        self.root.backend.set_numbers(int(self.text()), self.parent().field_coords)
-        self.root.backend.count_numbers()
+    def save_number(self) -> None:
+        self.root.backend.set_numbers(int(self.text()), self.parent().field_coords, is_start_number=True)
+        # self.parent().field_value.append
         self.root.make_update()
+    
+    def delete_number(self) -> None:
+        self.root.backend.set_numbers(None, self.parent().field_coords, is_start_number=False)
+        self.root.make_update()
+        self.parent().disconnect_button()
 
 class NavigationFrame(ANavigationFrame):
     def __init__(self, parent) -> None:
@@ -66,7 +109,7 @@ class NavigationFrame(ANavigationFrame):
         
         
     def step(self):
-        self.root.solution.step()     # WIP   
+        self.root.solution.step()
         self.root.make_update()
         
     def block(self):
@@ -94,8 +137,9 @@ class SubField(ASubField):
 
 class SingleField(ASingleField):
     def __init__(self, parent, coords: tuple) -> None:
-        super().__init__(parent, coords)
+        super().__init__(parent, coords, True)
         self.make_update()
+        self.connected_numbutton = None
     
     def toggle_edit(self, checked):
         if checked:
@@ -109,19 +153,32 @@ class SingleField(ASingleField):
         
     def check(self, self_checked):
         if self_checked:
-            # if number == None:
-            self.setStyleSheet("background-color: #ccffc7; border: 1px solid black;")
             self.root.action_frame.interaction_frame.edit_field.add_field_coords(self.coords)
-            # else check number in edit_field
-            #   -> if uncheck in edit_field -> delete number in backend
+            self.root.action_frame.interaction_frame.edit_field.field_value.append(self.backend_single_field.number)
+            value_count = self.root.action_frame.interaction_frame.edit_field.field_value.count(self.root.action_frame.interaction_frame.edit_field.field_value[-1])
+            
+            if value_count == len(self.root.action_frame.interaction_frame.edit_field.field_value) and self.backend_single_field.number:
+                self.root.action_frame.interaction_frame.edit_field.connect_button(self.backend_single_field.number)
+            else:
+                self.root.action_frame.interaction_frame.edit_field.disconnect_button()
         else:
-            self.setStyleSheet("background-color: #fffaf0; border: 1px solid black;")
             self.root.action_frame.interaction_frame.edit_field.remove_field_coords(self.coords)
+            self.root.action_frame.interaction_frame.edit_field.field_value.pop(-1)
+            if len(self.root.action_frame.interaction_frame.edit_field.field_value) <= 0:
+                self.root.action_frame.interaction_frame.edit_field.disconnect_button()
+        self.__set_style()
         self.update()
     
     def __set_style(self, subfield_blocked=False):
-        if self.backend_single_field.number:
-            self.setStyleSheet("background-color: #c9c9c9; border: 1px solid black;")
+        if self.backend_single_field.is_start_number:
+            if self.isChecked():
+                self.setStyleSheet("background-color: #9fff94; border: 1px solid black;")
+            else:
+                self.setStyleSheet("background-color: #c9c9c9; border: 1px solid black;")
+        elif self.isChecked():
+            self.setStyleSheet("background-color: #ccffc7; border: 1px solid black;")
+        elif self.backend_single_field.number:
+            self.setStyleSheet("background-color: #DBEEFF; border: 1px solid black;")
         elif self.backend_single_field.is_blocked or subfield_blocked:
             self.setStyleSheet("background-color: #c9f3f3; border: 1px solid black;")
         else:

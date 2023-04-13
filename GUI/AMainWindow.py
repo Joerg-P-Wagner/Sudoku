@@ -40,6 +40,7 @@ class AMainFrame(QFrame):   # AMainFrame == ROOT-Frame
     @abstractmethod
     def make_update(self) -> None:
         self.field_setting_frame.make_update()
+        self.action_frame.make_update()
 
 
 ##### ACTION FRAMES ###############################################################################

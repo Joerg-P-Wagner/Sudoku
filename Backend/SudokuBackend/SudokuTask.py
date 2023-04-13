@@ -29,9 +29,9 @@ class Field:
             m = v if v > m and v < 9 else m
         self.max_amount_number = r
 
-    def set_numbers(self, number, coords):
+    def set_numbers(self, number, coords, is_start_number=False):
         for coord in coords:
-            self.sub_fields[coord[0][0]][coord[0][1]].set_numbers(number, coord[1])
+            self.sub_fields[coord[0][0]][coord[0][1]].set_numbers(number, coord[1], is_start_number)
 
 
 class SubField:
@@ -40,8 +40,9 @@ class SubField:
         self.single_fields = [[SingleField(single_field_coords=(sub_field_coords,(x,y))) for y in range(3)] for x in range(3)]
         self.blocked = False
 
-    def set_numbers(self, number, coords) -> None:
-        self.single_fields[coords[0]][coords[1]].number = number
+    def set_numbers(self, n, coords, is_start_number) -> None:
+        self.single_fields[coords[0]][coords[1]].number = n
+        self.single_fields[coords[0]][coords[1]].is_start_number = is_start_number
     
     def get_numbers(self) -> list:
         return [ single_field.number for sl in self.single_fields for single_field in sl if single_field.number ]
@@ -50,6 +51,7 @@ class SubField:
 class SingleField:
     def __init__(self, single_field_coords) -> None:
         self.__number = None
+        self.__is_start_number = False
         self.__is_blocked = False
         self.__coords = single_field_coords
     
@@ -61,6 +63,14 @@ class SingleField:
     def number(self, n: int) -> None:
         self.__number = n
         self.is_blocked = True if n else False
+    
+    @property
+    def is_start_number(self) -> bool:
+        return self.__is_start_number
+    
+    @is_start_number.setter
+    def is_start_number(self, b: bool) -> None:
+        self.__is_start_number = b
     
     @property
     def is_blocked(self) -> None:
