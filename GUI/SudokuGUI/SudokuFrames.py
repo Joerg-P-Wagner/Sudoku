@@ -106,12 +106,11 @@ class NumberButtom(ASingleField):
 class NavigationFrame(ANavigationFrame):
     def __init__(self, parent) -> None:
         super().__init__(parent)
-        
-        
+
     def step(self):
         self.root.solution.step()
         self.root.make_update()
-        
+    
     def block(self):
         self.root.solution.block()
         self.root.make_update()
@@ -170,22 +169,33 @@ class SingleField(ASingleField):
         self.update()
     
     def __set_style(self, subfield_blocked=False):
-        if self.backend_single_field.is_start_number:
+        if self.backend_single_field.number == self.root.solution.number:
+            self.setStyleSheet("background-color: #7df9ff; border: 1px solid black;")   # Electric Blue
+        elif self.backend_single_field.is_start_number:
             if self.isChecked():
-                self.setStyleSheet("background-color: #9fff94; border: 1px solid black;")
+                self.setStyleSheet("background-color: #9fff94; border: 1px solid black;")   # Mint-Green
             else:
-                self.setStyleSheet("background-color: #c9c9c9; border: 1px solid black;")
+                self.setStyleSheet("background-color: #c9c9c9; border: 1px solid black;")   # Pastel Grey
         elif self.isChecked():
-            self.setStyleSheet("background-color: #ccffc7; border: 1px solid black;")
+            self.setStyleSheet("background-color: #ccffc7; border: 1px solid black;")   # Tea Green
         elif self.backend_single_field.number:
-            self.setStyleSheet("background-color: #DBEEFF; border: 1px solid black;")
+            self.setStyleSheet("background-color: #DBEEFF; border: 1px solid black;")   # Light Cyan
         elif self.backend_single_field.is_blocked or subfield_blocked:
-            self.setStyleSheet("background-color: #c9f3f3; border: 1px solid black;")
+            self.setStyleSheet("background-color: #c9f3f3; border: 1px solid black;")   # Pang
+        elif self.backend_single_field.is_expected_blocked:
+            self.setStyleSheet("background-color: #BDECB6; border: 1px solid black;")   # White Green
+        elif self.backend_single_field.is_single_free_field:
+            self.setStyleSheet("background-color: #fff600; border: 1px solid black;")   # Cadmium Yellow
         else:
-            self.setStyleSheet("background-color: #fffaf0; border: 1px solid black;")
+            self.setStyleSheet("background-color: #fffaf0; border: 1px solid black;")   # Floral White
     
     def __set_text(self):
-        v = self.backend_single_field.number
+        if self.backend_single_field.number:
+            v = self.backend_single_field.number
+        elif self.backend_single_field.expected_number:
+            v = self.backend_single_field.expected_number
+        else:
+            v = None
         text = str(v) if v else ""
         self.setText(text)
         self.update()
