@@ -1,9 +1,4 @@
-import logging, sys
 
-logger = logging.getLogger(__name__)
-stream_handler = logging.StreamHandler(sys.stdout)
-logger.addHandler(stream_handler)
-logger.setLevel(10)
 
 class SudokuSolution:
     def __init__(self, field) -> None:
@@ -23,14 +18,13 @@ class SudokuSolution:
         self.count = 0
         
         self.steps_1 = [self.toggle_block, self.get_free_fields, self.get_single_free_fields, self.set_numbers, self.toggle_block]
-        self.steps_2 = [self.toggle_block, self.get_free_fields, self.toggle_expectation, self.get_free_fields, self.get_single_free_fields, self.toggle_expectation, self.toggle_block]
+        self.steps_2 = [self.toggle_block, self.get_free_fields, self.toggle_expectation, self.get_free_fields, self.get_single_free_fields, self.set_numbers, self.toggle_expectation, self.toggle_block]
     
     def block(self):
         self.toggle_block()
     
     def toggle_block(self):
         self.blocked = True if not self.blocked else False
-        logger.debug("in toggle_block; block = {self.blocked}")
         for x in self.field.sub_fields:
             for sub_field in x:
                 if self.number in sub_field.get_numbers():
@@ -42,26 +36,24 @@ class SudokuSolution:
                             self.block_cross(single_field.coords, self.blocked)
     
     def block_cross(self, coords, on):
-        self.block_horizontal(coords[0][0], coords[1][0], on)
-        self.block_vertical(coords[0][1], coords[1][1], on)
+        self.block_horizontal(coords[0][0], coords[1][0], coords[0][1], on)
+        self.block_vertical(coords[0][1], coords[1][1], coords[0][0], on)
     
-    def block_horizontal(self, x1, x2, on, exp=False):
-        logger.debug(f"in block horizontal x1={x1} x2={x2} on={on} exp={exp}")
+    def block_horizontal(self, x1, x2, self_sub_y, on, exp=False):
         for y in range(3):
             for z in range(3):
                 if exp:
-                    if not self.field.sub_fields[x1][y].single_fields[x2][z].expected_number:   # toggle also expected numbers if they are not themself
+                    if not self.field.sub_fields[x1][y].single_fields[x2][z].number and y != self_sub_y:
                         self.field.sub_fields[x1][y].single_fields[x2][z].is_expected_blocked = on
                 else:
                     if not self.field.sub_fields[x1][y].single_fields[x2][z].number:
                         self.field.sub_fields[x1][y].single_fields[x2][z].is_blocked = on
     
-    def block_vertical(self, y1, y2, on, exp=False):
-        logger.debug(f"in block vertical y1={y1} y2={y2} on={on} exp={exp}")
+    def block_vertical(self, y1, y2, self_sub_x, on, exp=False):
         for x in range(3):
             for z in range(3):
                 if exp:
-                    if not self.field.sub_fields[x][y1].single_fields[z][y2].expected_number:
+                    if not self.field.sub_fields[x][y1].single_fields[z][y2].number and x != self_sub_x:
                         self.field.sub_fields[x][y1].single_fields[z][y2].is_expected_blocked = on
                 else:
                     if not self.field.sub_fields[x][y1].single_fields[z][y2].number:
@@ -81,55 +73,55 @@ class SudokuSolution:
                 l = []
                 l = [ single_field.coords for sl in sub_field.single_fields for single_field in sl if not (single_field.is_blocked or single_field.is_expected_blocked) ]
                 self.free_fields.append(l)
-        print(f"free_fields -> {self.free_fields}")
 
     def get_single_free_fields(self):
         self.single_free_fields = []
         for l in self.free_fields:
             if len(l) == 1:
+                print(f"in get_single_free_fields: l = {l}")
                 self.field.sub_fields[l[0][0][0]][l[0][0][1]].single_fields[l[0][1][0]][l[0][1][1]].is_single_free_field = True
                 self.single_free_fields.append(*l)
-                print(l)
 
     def set_numbers(self) -> None:
         self.field.set_numbers(self.number, self.single_free_fields)
 
-    def toggle_expectation(self):   # find lines -> set expected numbers -> block
+    def toggle_expectation(self):
         self.expected_blocked = True if not self.expected_blocked else False
-        self.expected_lines = []
-        for fields in self.free_fields:
-            if 1 < len(fields) < 4:
-                horizontal = True
-                vertical = True
-                h_coord = fields[0][1][0]
-                v_coord = fields[0][1][1]
-                for coord_pair in fields:
-                    if h_coord != coord_pair[1][0]:
-                        horizontal = False
-                        break
-                for coord_pair in fields:
-                    if v_coord != coord_pair[1][1]:
-                        vertical = False
-                        break
-                if horizontal or vertical:
-                    self.expected_lines.append((fields, horizontal))
+        if self.expected_blocked:
+            self.expected_lines = []
+            for fields in self.free_fields:
+                if 1 < len(fields) < 4:
+                    horizontal = True
+                    vertical = True
+                    h_coord = fields[0][1][0]
+                    v_coord = fields[0][1][1]
+                    for coord_pair in fields:
+                        if h_coord != coord_pair[1][0]:
+                            horizontal = False
+                            break
+                    for coord_pair in fields:
+                        if v_coord != coord_pair[1][1]:
+                            vertical = False
+                            break
+                    if horizontal or vertical:
+                        self.expected_lines.append((fields, horizontal))
         self.toggle_expected_numbers(on=self.expected_blocked)
         self.toggle_expected_block(on=self.expected_blocked)
     
     def toggle_expected_numbers(self, on) -> None:
         for coords in self.expected_lines:
+            print(f"in toggle_expected_numbers: number={self.number} coords={coords[0]} on={on}")
             if on:
                 self.field.set_numbers(self.number, coords[0], is_expected=True)
             else:
                 self.field.set_numbers(None, coords[0], is_expected=True)   
 
     def toggle_expected_block(self, on):
-        print(f"block is {on} self.expected_lines -> {self.expected_lines}")
         for line in self.expected_lines:
             if line[1]:
-                self.block_horizontal(line[0][0][0][0], line[0][0][1][0], on, exp=True)
+                self.block_horizontal(line[0][0][0][0], line[0][0][1][0], line[0][0][0][1], on, exp=True)
             else:
-                self.block_vertical(line[0][0][0][1], line[0][0][1][1], on, exp=True)
+                self.block_vertical(line[0][0][0][1], line[0][0][1][1], line[0][0][0][0], on, exp=True)
     
     def detect_progress(self):
         if self.number == 1:
